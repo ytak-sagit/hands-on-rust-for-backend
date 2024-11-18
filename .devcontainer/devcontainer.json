@@ -9,7 +9,8 @@
                 "fill-labs.dependi", // crate 管理用
                 "Swellaby.vscode-rust-test-adapter", // Rust 用テストエクスプローラー
                 "JScearcy.rust-doc-viewer", // ローカルで生成された Rust ドキュメント用ビューワ
-                "rust-lang.rust-analyzer"   // Rust の入力補完や文法ミスチェック等
+                "rust-lang.rust-analyzer", // Rust の入力補完や文法ミスチェック等
+                "mhutchie.git-graph" // Git Graph
             ]
         }
     }
