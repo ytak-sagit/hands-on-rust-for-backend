@@ -5,4 +5,8 @@
     },
     "rust-analyzer.checkOnSave": true,
     "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.linkedProjects": [
+        // Path to 'Cargo.toml'
+        "/workspaces/hands-on-rust-for-backend/hello_world/Cargo.toml",
+    ],
 }
