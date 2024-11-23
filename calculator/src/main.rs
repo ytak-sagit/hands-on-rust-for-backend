@@ -17,11 +17,12 @@ impl Memory {
     }
 
     // メソッド
-    fn get(&self, slot_name: &str) -> Option<f64> {
+    fn get(&self, slot_name: &str) -> f64 {
         // self.slots.get(slot_name) の戻り値は Option<&f64>
         // Option の中身が参照のままでは値を返せない
         // そのため、copied() メソッドで Option<f64> 型へ変換する
-        self.slots.get(slot_name).copied()
+        // また、メモリが見つからなかった場合の値として 0.0 を使う
+        self.slots.get(slot_name).copied().unwrap_or(0.0)
     }
 
     // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
@@ -94,8 +95,7 @@ fn print_output(value: f64) {
 // NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
 fn eval_token(token: &str, memory: &Memory) -> f64 {
     if let Some(slot_name) = token.strip_prefix("mem") {
-        // メモリが見つからなかった場合の値として 0.0 を使う
-        memory.get(slot_name).unwrap_or(0.0)
+        memory.get(slot_name)
     } else {
         token.parse::<f64>().unwrap()
     }
