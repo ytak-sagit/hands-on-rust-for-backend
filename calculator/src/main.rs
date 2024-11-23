@@ -1,7 +1,8 @@
 use std::io::stdin;
 
 fn main() {
-    let mut memory: f64 = 0.0;
+    // 10個の記憶領域（メモリ）を用意
+    let mut memories = vec![0.0; 10];
     let mut previous_result: f64 = 0.0;
 
     for line in stdin().lines() {
@@ -15,18 +16,19 @@ fn main() {
         let tokens = line.split_whitespace().collect::<Vec<&str>>();
 
         // メモリへの書き込み処理かどうか判定
-        if tokens[0] == "mem+" {
-            add_and_print_memory(&mut memory, previous_result);
+        let is_memory = tokens[0].starts_with("mem");
+        if is_memory && tokens[0].ends_with("+") {
+            add_and_print_memory(&mut memories, tokens[0], previous_result);
             continue;
-        } else if tokens[0] == "mem-" {
-            add_and_print_memory(&mut memory, -previous_result);
+        } else if is_memory && tokens[0].ends_with("-") {
+            add_and_print_memory(&mut memories, tokens[0], -previous_result);
             continue;
         }
 
         // 式の計算
-        let left = eval_token(tokens[0], memory);
+        let left = eval_token(tokens[0], &memories);
         let operator = tokens[1];
-        let right = eval_token(tokens[2], memory);
+        let right = eval_token(tokens[2], &memories);
         let current_result = eval_expression(left, operator, right);
 
         // 直前の計算結果として一時的に保存
@@ -41,9 +43,13 @@ fn print_output(value: f64) {
     println!("  => {}", value);
 }
 
-fn eval_token(token: &str, memory: f64) -> f64 {
-    if token == "mem" {
-        memory
+// NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
+// NOTE: str: 文字列のスライス
+// NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
+fn eval_token(token: &str, memories: &[f64]) -> f64 {
+    if token.starts_with("mem") {
+        let slot_index = token[3..].parse::<usize>().unwrap();
+        memories[slot_index]
     } else {
         token.parse::<f64>().unwrap()
     }
@@ -61,7 +67,8 @@ fn eval_expression(left: f64, operator: &str, right: f64) -> f64 {
 
 // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
 // NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
-fn add_and_print_memory(memory: &mut f64, previous_result: f64) {
-    *memory += previous_result;
-    print_output(*memory);
+fn add_and_print_memory(memories: &mut [f64], token: &str, previous_result: f64) {
+    let slot_index = token[3..token.len() - 1].parse::<usize>().unwrap();
+    memories[slot_index] += previous_result;
+    print_output(memories[slot_index]);
 }
