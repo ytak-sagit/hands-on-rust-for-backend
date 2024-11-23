@@ -26,19 +26,19 @@ impl Memory {
 
     // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
     // NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
-    fn add_and_print(&mut self, token: &str, previous_result: f64) {
+    fn add(&mut self, token: &str, previous_result: f64) -> f64 {
         let slot_name = token[3..token.len() - 1].to_string();
 
         match self.slots.entry(slot_name) {
             Entry::Occupied(mut entry) => {
-                // メモリが見つかったので、値を更新・表示して終了
+                // メモリが見つかったので、値を更新する
                 *entry.get_mut() += previous_result;
-                print_output(*entry.get());
+                *entry.get()
             }
             Entry::Vacant(entry) => {
-                // メモリが見つからなかったので、要素を追加する
+                // メモリが見つからなかったので、値を追加する
                 entry.insert(previous_result);
-                print_output(previous_result);
+                previous_result
             }
         }
     }
@@ -62,10 +62,12 @@ fn main() {
         // メモリへの書き込み処理かどうか判定
         let is_memory = tokens[0].starts_with("mem");
         if is_memory && tokens[0].ends_with("+") {
-            memory.add_and_print(tokens[0], previous_result);
+            let memorized = memory.add(tokens[0], previous_result);
+            print_output(memorized);
             continue;
         } else if is_memory && tokens[0].ends_with("-") {
-            memory.add_and_print(tokens[0], -previous_result);
+            let memorized = memory.add(tokens[0], -previous_result);
+            print_output(memorized);
             continue;
         }
 
