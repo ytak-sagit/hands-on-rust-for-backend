@@ -47,8 +47,8 @@ fn print_output(value: f64) {
 // NOTE: str: 文字列のスライス
 // NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
 fn eval_token(token: &str, memories: &[f64]) -> f64 {
-    if token.starts_with("mem") {
-        let slot_index = token[3..].parse::<usize>().unwrap();
+    if let Some(slot_index) = token.strip_prefix("mem") {
+        let slot_index = slot_index.parse::<usize>().unwrap();
         memories[slot_index]
     } else {
         token.parse::<f64>().unwrap()
