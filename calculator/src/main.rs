@@ -1,7 +1,12 @@
 use std::io::stdin;
 
+struct KeyValuePair<T> {
+    key: String,
+    value: T,
+}
+
 struct Memory {
-    slots: Vec<(String, f64)>,
+    slots: Vec<KeyValuePair<f64>>,
 }
 
 fn main() {
@@ -54,9 +59,9 @@ fn eval_token(token: &str, memory: &Memory) -> f64 {
     if let Some(slot_name) = token.strip_prefix("mem") {
         // すべてのメモリを探索する
         for slot in memory.slots.iter() {
-            if slot.0 == slot_name {
+            if slot.key == slot_name {
                 // メモリが見つかったので、値を返して終了
-                return slot.1;
+                return slot.value;
             }
         }
 
@@ -84,15 +89,18 @@ fn add_and_print_memory(memory: &mut Memory, token: &str, previous_result: f64) 
 
     // すべてのメモリを探索する
     for slot in memory.slots.iter_mut() {
-        if slot.0 == slot_name {
+        if slot.key == slot_name {
             // メモリが見つかったので、値を更新・表示して終了
-            slot.1 += previous_result;
-            print_output(slot.1);
+            slot.value += previous_result;
+            print_output(slot.value);
             return;
         }
     }
 
     // メモリが見つからなかったので、最後の要素に追加する
-    memory.slots.push((slot_name.to_string(), previous_result));
+    memory.slots.push(KeyValuePair {
+        key: slot_name.to_string(),
+        value: previous_result,
+    });
     print_output(previous_result);
 }
