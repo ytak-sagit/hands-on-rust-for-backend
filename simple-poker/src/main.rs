@@ -79,4 +79,33 @@ fn main() {
     for (i, card) in hands.iter().enumerate() {
         println!("{}: {:?} {}", i + 1, card.suit, card.rank);
     }
+
+    // ---
+
+    // フラッシュのチェック
+    let suit = hands.first().unwrap().suit;
+    let is_flash = hands.iter().all(|card| card.suit == suit);
+
+    // ペア数のチェック
+    let mut count = 0;
+    for i in 0..hands.len() - 1 {
+        for j in i + 1..hands.len() {
+            if hands[i].rank == hands[j].rank {
+                count += 1;
+            }
+        }
+    }
+
+    // 役判定
+    if is_flash {
+        println!("フラッシュ！");
+    } else if count >= 3 {
+        println!("スリーカード！");
+    } else if count == 2 {
+        println!("ツーペア！");
+    } else if count == 1 {
+        println!("ワンペア！");
+    } else {
+        println!("役なし...T^T");
+    }
 }
