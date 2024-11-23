@@ -8,7 +8,8 @@
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.linkedProjects": [
         // Path to 'Cargo.toml'
-        "/workspaces/hands-on-rust-for-backend/hello_world/Cargo.toml",
-        "/workspaces/hands-on-rust-for-backend/arithmetic-operations-quiz/Cargo.toml",
+        "hello_world/Cargo.toml",
+        "arithmetic-operations-quiz/Cargo.toml",
+        "simple-poker/Cargo.toml"
     ],
 }
