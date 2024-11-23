@@ -16,14 +16,34 @@ fn main() {
         let operator = tokens[1];
         let right = tokens[2].parse::<f64>().unwrap();
         let result = match operator {
-            "+" => left + right,
-            "-" => left - right,
-            "*" => left * right,
-            "/" => left / right,
+            "+" => add(left, right),
+            "-" => subtract(left, right),
+            "*" => multiply(left, right),
+            "/" => divide(left, right),
             _ => unreachable!(),
         };
 
         // 計算結果の表示
-        println!("  => {}", result);
+        print_value(result);
     }
+}
+
+fn print_value(value: f64) {
+    println!("  => {}", value);
+}
+
+fn add(left: f64, right: f64) -> f64 {
+    left + right
+}
+
+fn subtract(left: f64, right: f64) -> f64 {
+    left - right
+}
+
+fn multiply(left: f64, right: f64) -> f64 {
+    left * right
+}
+
+fn divide(left: f64, right: f64) -> f64 {
+    left / right
 }
