@@ -1,42 +1,38 @@
-use std::io::stdin;
-
-struct KeyValuePair<T> {
-    key: String,
-    value: T,
-}
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    io::stdin,
+};
 
 struct Memory {
-    slots: Vec<KeyValuePair<f64>>,
+    slots: HashMap<String, f64>,
 }
 
 impl Memory {
     // 関連関数
     // NOTE: 他言語での静的メソッドのようなもの
     fn new() -> Self {
-        Self { slots: vec![] }
+        Self {
+            slots: HashMap::new(),
+        }
     }
 
     // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
     // NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
     fn add_and_print(&mut self, token: &str, previous_result: f64) {
-        let slot_name = &token[3..token.len() - 1];
+        let slot_name = token[3..token.len() - 1].to_string();
 
-        // すべてのメモリを探索する
-        for slot in self.slots.iter_mut() {
-            if slot.key == slot_name {
+        match self.slots.entry(slot_name) {
+            Entry::Occupied(mut entry) => {
                 // メモリが見つかったので、値を更新・表示して終了
-                slot.value += previous_result;
-                print_output(slot.value);
-                return;
+                *entry.get_mut() += previous_result;
+                print_output(*entry.get());
+            }
+            Entry::Vacant(entry) => {
+                // メモリが見つからなかったので、要素を追加する
+                entry.insert(previous_result);
+                print_output(previous_result);
             }
         }
-
-        // メモリが見つからなかったので、最後の要素に追加する
-        self.slots.push(KeyValuePair {
-            key: slot_name.to_string(),
-            value: previous_result,
-        });
-        print_output(previous_result);
     }
 
     // NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
@@ -44,16 +40,11 @@ impl Memory {
     // NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
     fn eval_token(&self, token: &str) -> f64 {
         if let Some(slot_name) = token.strip_prefix("mem") {
-            // すべてのメモリを探索する
-            for slot in self.slots.iter() {
-                if slot.key == slot_name {
-                    // メモリが見つかったので、値を返して終了
-                    return slot.value;
-                }
-            }
-
-            // メモリが見つからなかったので、初期値を返す
-            0.0
+            // self.slots.get(slot_name) の戻り値は Option<&f64>
+            // Option の中身が参照のままでは値を返せない
+            // そのため、copied() メソッドで Option<f64> 型へ変換する
+            // また、メモリが見つからなかった場合の値として 0.0 を使う
+            self.slots.get(slot_name).copied().unwrap_or(0.0)
         } else {
             token.parse::<f64>().unwrap()
         }
