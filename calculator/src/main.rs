@@ -16,6 +16,14 @@ impl Memory {
         }
     }
 
+    // メソッド
+    fn get(&self, slot_name: &str) -> Option<f64> {
+        // self.slots.get(slot_name) の戻り値は Option<&f64>
+        // Option の中身が参照のままでは値を返せない
+        // そのため、copied() メソッドで Option<f64> 型へ変換する
+        self.slots.get(slot_name).copied()
+    }
+
     // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
     // NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
     fn add_and_print(&mut self, token: &str, previous_result: f64) {
@@ -32,21 +40,6 @@ impl Memory {
                 entry.insert(previous_result);
                 print_output(previous_result);
             }
-        }
-    }
-
-    // NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
-    // NOTE: str: 文字列のスライス
-    // NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
-    fn eval_token(&self, token: &str) -> f64 {
-        if let Some(slot_name) = token.strip_prefix("mem") {
-            // self.slots.get(slot_name) の戻り値は Option<&f64>
-            // Option の中身が参照のままでは値を返せない
-            // そのため、copied() メソッドで Option<f64> 型へ変換する
-            // また、メモリが見つからなかった場合の値として 0.0 を使う
-            self.slots.get(slot_name).copied().unwrap_or(0.0)
-        } else {
-            token.parse::<f64>().unwrap()
         }
     }
 }
@@ -77,9 +70,9 @@ fn main() {
         }
 
         // 式の計算
-        let left = memory.eval_token(tokens[0]);
+        let left = eval_token(tokens[0], &memory);
         let operator = tokens[1];
-        let right = memory.eval_token(tokens[2]);
+        let right = eval_token(tokens[2], &memory);
         let current_result = eval_expression(left, operator, right);
 
         // 直前の計算結果として一時的に保存
@@ -92,6 +85,18 @@ fn main() {
 
 fn print_output(value: f64) {
     println!("  => {}", value);
+}
+
+// NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
+// NOTE: str: 文字列のスライス
+// NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
+fn eval_token(token: &str, memory: &Memory) -> f64 {
+    if let Some(slot_name) = token.strip_prefix("mem") {
+        // メモリが見つからなかった場合の値として 0.0 を使う
+        memory.get(slot_name).unwrap_or(0.0)
+    } else {
+        token.parse::<f64>().unwrap()
+    }
 }
 
 fn eval_expression(left: f64, operator: &str, right: f64) -> f64 {
