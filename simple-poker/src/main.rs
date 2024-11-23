@@ -1,3 +1,5 @@
+use rand::seq::SliceRandom;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Suit {
     Club,
@@ -26,6 +28,10 @@ fn main() {
             deck.push(card);
         }
     }
+
+    // 山札をシャッフル
+    let mut rng = rand::thread_rng();
+    deck.shuffle(&mut rng);
 
     // NOTE: 構造体やコレクションの中身の表示には {:?} or {:#?} を指定する必要がある
     println!("{:?}", deck);
