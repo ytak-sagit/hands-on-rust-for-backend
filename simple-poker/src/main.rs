@@ -54,4 +54,29 @@ fn main() {
     for (i, card) in hands.iter().enumerate() {
         println!("{}: {:?} {}", i + 1, card.suit, card.rank);
     }
+
+    // ---
+    println!("入れ替えたいカードの番号を入力してください(例: 1 2 3)");
+
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+
+    let indexes = input
+        .split_whitespace()
+        .map(|i| i.parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
+
+    // 与えられた数字の箇所を、山札から取り出したカードに置き換える
+    for i in indexes {
+        hands[i - 1] = deck.pop().unwrap();
+    }
+
+    // 手札を rank 順にソート
+    hands.sort_by(|a, b| a.rank.cmp(&b.rank));
+
+    // 手札の表示
+    println!("--- Hand ---");
+    for (i, card) in hands.iter().enumerate() {
+        println!("{}: {:?} {}", i + 1, card.suit, card.rank);
+    }
 }
