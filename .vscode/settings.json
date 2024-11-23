@@ -10,6 +10,7 @@
         // Path to 'Cargo.toml'
         "hello_world/Cargo.toml",
         "arithmetic-operations-quiz/Cargo.toml",
-        "simple-poker/Cargo.toml"
+        "simple-poker/Cargo.toml",
+        "calculator/Cargo.toml",
     ],
 }
