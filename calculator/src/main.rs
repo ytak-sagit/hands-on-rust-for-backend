@@ -16,10 +16,10 @@ fn main() {
         let operator = tokens[1];
         let right = tokens[2].parse::<f64>().unwrap();
         let result = match operator {
-            "+" => add(left, right),
-            "-" => subtract(left, right),
-            "*" => multiply(left, right),
-            "/" => divide(left, right),
+            "+" => left + right,
+            "-" => left - right,
+            "*" => left * right,
+            "/" => left / right,
             _ => unreachable!(),
         };
 
@@ -30,20 +30,4 @@ fn main() {
 
 fn print_output(value: f64) {
     println!("  => {}", value);
-}
-
-fn add(left: f64, right: f64) -> f64 {
-    left + right
-}
-
-fn subtract(left: f64, right: f64) -> f64 {
-    left - right
-}
-
-fn multiply(left: f64, right: f64) -> f64 {
-    left * right
-}
-
-fn divide(left: f64, right: f64) -> f64 {
-    left / right
 }
