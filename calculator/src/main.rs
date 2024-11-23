@@ -24,11 +24,11 @@ fn main() {
         };
 
         // 計算結果の表示
-        print_value(result);
+        print_output(result);
     }
 }
 
-fn print_value(value: f64) {
+fn print_output(value: f64) {
     println!("  => {}", value);
 }
 
