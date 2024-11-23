@@ -16,12 +16,10 @@ fn main() {
 
         // メモリへの書き込み処理かどうか判定
         if tokens[0] == "mem+" {
-            memory += previous_result;
-            print_output(memory);
+            add_and_print_memory(&mut memory, previous_result);
             continue;
         } else if tokens[0] == "mem-" {
-            memory -= previous_result;
-            print_output(memory);
+            add_and_print_memory(&mut memory, -previous_result);
             continue;
         }
 
@@ -59,4 +57,11 @@ fn eval_expression(left: f64, operator: &str, right: f64) -> f64 {
         "/" => left / right,
         _ => unreachable!(),
     }
+}
+
+// NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
+// NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
+fn add_and_print_memory(memory: &mut f64, previous_result: f64) {
+    *memory += previous_result;
+    print_output(*memory);
 }
