@@ -13,13 +13,20 @@ struct Card {
 }
 
 fn main() {
-    let suit = Suit::Club;
-    let rank = 1;
+    // Vec の用意
+    let mut deck = Vec::<Card>::new();
+    let suits = [Suit::Club, Suit::Diamond, Suit::Heart, Suit::Spade];
 
-    // 構造体のインスタンスを生成
-    // NOTE: フィールド名と変数名が同じ場合、短く書ける
-    let card = Card { suit, rank };
+    // トランプの山札を作成
+    for suit in suits {
+        for rank in 1..=13 {
+            // 構造体のインスタンスを生成
+            // NOTE: フィールド名と変数名が同じ場合、短く書ける
+            let card = Card { suit, rank };
+            deck.push(card);
+        }
+    }
 
-    // NOTE: 構造体の中身の表示には {:?} or {:#?} を指定する必要がある
-    println!("{:?}", card);
+    // NOTE: 構造体やコレクションの中身の表示には {:?} or {:#?} を指定する必要がある
+    println!("{:?}", deck);
 }
