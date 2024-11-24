@@ -47,6 +47,8 @@ jobs:
 
       - name: Rust caching
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ matrix.projects }}
 
       - name: Run unit test
         run: cargo test --verbose
