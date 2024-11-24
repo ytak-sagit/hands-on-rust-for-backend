@@ -200,6 +200,56 @@ mod tests {
     }
 
     #[test]
+    fn トークン列の分割ができる_数値のみ() {
+        // 加算
+        assert_eq!(
+            Token::split("1 + 2"),
+            vec![Token::Number(1.0), Token::Plus, Token::Number(2.0)]
+        );
+        // 減算
+        assert_eq!(
+            Token::split("1.5 - 2.3"),
+            vec![Token::Number(1.5), Token::Minus, Token::Number(2.3)]
+        );
+        // 乗算
+        assert_eq!(
+            Token::split("0.1 * 9.0"),
+            vec![Token::Number(0.1), Token::Asterisk, Token::Number(9.0)]
+        );
+        // 除算
+        assert_eq!(
+            Token::split("6.7 / 4.89"),
+            vec![Token::Number(6.7), Token::Slash, Token::Number(4.89)]
+        );
+    }
+
+    #[test]
+    fn トークン列の分割ができる_メモリへの加減算() {
+        // メモリへの加算
+        assert_eq!(
+            Token::split("memABC+"),
+            vec![Token::MemoryPlus("ABC".to_string())]
+        );
+        // メモリへの減算
+        assert_eq!(
+            Token::split("memxyz-"),
+            vec![Token::MemoryMinus("xyz".to_string())]
+        );
+    }
+
+    #[test]
+    fn トークン列の分割ができる_メモリの参照() {
+        assert_eq!(
+            Token::split("mem_ijk + mem+OPQ"),
+            vec![
+                Token::MemoryRef("_ijk".to_string()),
+                Token::Plus,
+                Token::MemoryRef("+OPQ".to_string()),
+            ]
+        );
+    }
+
+    #[test]
     fn トークンとして数値を保存済のメモリ名が指定された場合に保存済の数値を取得できる() {
         // Arrange
         let mut memory = Memory::new();
