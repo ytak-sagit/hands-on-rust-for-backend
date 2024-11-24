@@ -157,6 +157,43 @@ mod tests {
     }
 
     #[test]
+    fn トークンとして数値を保存済のメモリ名が指定された場合に保存済の数値を取得できる() {
+        // Arrange
+        let mut memory = Memory::new();
+        memory.add("memTest+", 10_000.0);
+
+        // Act
+        let actual = eval_token("memTest", &memory);
+
+        // Assert
+        assert_eq!(actual, 10_000.0);
+    }
+
+    #[test]
+    fn トークンとして数値を未保存のメモリ名が指定された場合にデフォルト値を取得できる() {
+        // Arrange
+        let memory = Memory::new();
+
+        // Act
+        let actual = eval_token("memTest", &memory);
+
+        // Assert
+        assert_eq!(actual, 0.0);
+    }
+
+    #[test]
+    fn トークンとして数値が指定された場合にその数値を取得できる() {
+        // Arrange
+        let _dummy = Memory::new();
+
+        // Act
+        let actual = eval_token("-567.89", &_dummy);
+
+        // Assert
+        assert_eq!(actual, -567.89);
+    }
+
+    #[test]
     fn 指定した演算子に基づいて二項の計算が正しく行われる() {
         // 加算
         assert_eq!(eval_expression(1.0, "+", 2.0), 3.0);
