@@ -116,6 +116,47 @@ mod tests {
     use super::*;
 
     #[test]
+    fn メモリに任意の名称で数値を保存できる() {
+        // Arrange
+        let mut sut = Memory::new();
+
+        // Act
+        let actual = sut.add("memHoge+", 123.0);
+
+        // Assert
+        assert_eq!(actual, 123.0);
+        assert_eq!(sut.get("Hoge"), 123.0);
+    }
+
+    #[test]
+    fn メモリに保存済の値に加算した数値を上書き保存できる() {
+        // Arrange
+        let mut sut = Memory::new();
+        sut.add("memFuga+", 111.1);
+
+        // Act
+        let actual = sut.add("memFuga+", 123.45);
+
+        // Assert
+        assert_eq!(actual, 234.55);
+        assert_eq!(sut.get("Fuga"), 234.55);
+    }
+
+    #[test]
+    fn メモリに保存済の値から減算した数値を上書き保存できる() {
+        // Arrange
+        let mut sut = Memory::new();
+        sut.add("memPiyo+", 123.45);
+
+        // Act
+        let actual = sut.add("memPiyo-", -123.45);
+
+        // Assert
+        assert_eq!(actual, 0.0);
+        assert_eq!(sut.get("Piyo"), 0.0);
+    }
+
+    #[test]
     fn 指定した演算子に基づいて二項の計算が正しく行われる() {
         // 加算
         assert_eq!(eval_expression(1.0, "+", 2.0), 3.0);
