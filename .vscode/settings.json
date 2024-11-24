@@ -2,15 +2,14 @@
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true,
-        "files.autoSave": "off",
+        "files.autoSave": "off"
     },
     "rust-analyzer.checkOnSave": true,
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.linkedProjects": [
-        // Path to 'Cargo.toml'
         "hello_world/Cargo.toml",
         "arithmetic-operations-quiz/Cargo.toml",
         "simple-poker/Cargo.toml",
-        "calculator/Cargo.toml",
-    ],
+        "calculator/Cargo.toml"
+    ]
 }
