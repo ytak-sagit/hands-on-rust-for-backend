@@ -110,3 +110,20 @@ fn eval_expression(left: f64, operator: &str, right: f64) -> f64 {
         _ => unreachable!(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn 指定した演算子に基づいて二項の計算が正しく行われる() {
+        // 加算
+        assert_eq!(eval_expression(1.0, "+", 2.0), 3.0);
+        // 減算
+        assert_eq!(eval_expression(1.0, "-", 2.0), -1.0);
+        // 乗算
+        assert_eq!(eval_expression(1.0, "*", 2.0), 2.0);
+        // 除算
+        assert_eq!(eval_expression(1.0, "/", 2.0), 0.5);
+    }
+}
