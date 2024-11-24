@@ -45,6 +45,49 @@ impl Memory {
     }
 }
 
+// NOTE: 列挙子には値を添付できる
+#[derive(Debug, PartialEq)]
+enum Token {
+    Number(f64),
+    MemoryRef(String),
+    MemoryPlus(String),
+    MemoryMinus(String),
+    Plus,
+    Minus,
+    Asterisk,
+    Slash,
+}
+
+// NOTE: enum も実装できる
+impl Token {
+    fn parse(value: &str) -> Self {
+        match value {
+            "+" => Self::Plus,
+            "-" => Self::Minus,
+            "*" => Self::Asterisk,
+            "/" => Self::Slash,
+            // NOTE: match 式は値の一致だけでなく、追加の条件式も書ける
+            _ if value.starts_with("mem") => {
+                let mut memory_name = value[3..].to_string();
+                if value.ends_with("+") {
+                    memory_name.pop(); // 末尾の1文字を削除
+                    Self::MemoryPlus(memory_name)
+                } else if value.ends_with("-") {
+                    memory_name.pop(); // 末尾の1文字を削除
+                    Self::MemoryMinus(memory_name)
+                } else {
+                    Self::MemoryRef(memory_name)
+                }
+            }
+            _ => Self::Number(value.parse().unwrap()),
+        }
+    }
+
+    fn split(text: &str) -> Vec<Self> {
+        text.split_whitespace().map(Self::parse).collect()
+    }
+}
+
 fn main() {
     // 任意の名称で保持できる可変長メモリを用意
     let mut memory = Memory::new();
