@@ -17,6 +17,9 @@ impl Memory {
     }
 
     // メソッド
+    // NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
+    // NOTE: str: 文字列のスライス
+    // NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
     fn get(&self, slot_name: &str) -> f64 {
         // self.slots.get(slot_name) の戻り値は Option<&f64>
         // Option の中身が参照のままでは値を返せない
@@ -27,9 +30,8 @@ impl Memory {
 
     // NOTE: &変数名: 不変参照渡し, &mut 変数名: 可変参照渡し
     // NOTE: *変数名: 参照外し（値への参照から値そのものを取り出す）
-    fn add(&mut self, token: &str, previous_result: f64) -> f64 {
-        let slot_name = token[3..token.len() - 1].to_string();
-
+    fn add(&mut self, slot_name: &str, previous_result: f64) -> f64 {
+        let slot_name = slot_name.to_string();
         match self.slots.entry(slot_name) {
             Entry::Occupied(mut entry) => {
                 // メモリが見つかったので、値を更新する
@@ -100,32 +102,35 @@ fn main() {
             break;
         }
 
-        // 入力値を空白で分割
-        let tokens = line.split_whitespace().collect::<Vec<&str>>();
+        // トークン列に分割
+        let tokens = Token::split(&line);
 
-        // メモリへの書き込み処理かどうか判定
-        let is_memory = tokens[0].starts_with("mem");
-        if is_memory && tokens[0].ends_with("+") {
-            let memorized = memory.add(tokens[0], previous_result);
-            print_output(memorized);
-            continue;
-        } else if is_memory && tokens[0].ends_with("-") {
-            let memorized = memory.add(tokens[0], -previous_result);
-            print_output(memorized);
-            continue;
+        // 式の評価
+        match &tokens[0] {
+            Token::MemoryPlus(memory_name) => {
+                // メモリへの加算
+                let memorized = memory.add(memory_name, previous_result);
+                print_output(memorized);
+            }
+            Token::MemoryMinus(memory_name) => {
+                // メモリへの減算
+                let memorized = memory.add(memory_name, -previous_result);
+                print_output(memorized);
+            }
+            _ => {
+                // 式の値の計算
+                let left = eval_token(&tokens[0], &memory);
+                let operator = &tokens[1];
+                let right = eval_token(&tokens[2], &memory);
+                let current_result = eval_expression(left, operator, right);
+
+                // 直前の計算結果として一時的に保存
+                previous_result = current_result;
+
+                // 計算結果の表示
+                print_output(current_result);
+            }
         }
-
-        // 式の計算
-        let left = eval_token(tokens[0], &memory);
-        let operator = tokens[1];
-        let right = eval_token(tokens[2], &memory);
-        let current_result = eval_expression(left, operator, right);
-
-        // 直前の計算結果として一時的に保存
-        previous_result = current_result;
-
-        // 計算結果の表示
-        print_output(current_result);
     }
 }
 
@@ -133,23 +138,20 @@ fn print_output(value: f64) {
     println!("  => {}", value);
 }
 
-// NOTE: [T]: 配列のスライス（配列の一部分または全体の覗き窓）
-// NOTE: str: 文字列のスライス
-// NOTE: 参照の借用（borrow）により、値へアクセスするための参照を一時的に借りることができる
-fn eval_token(token: &str, memory: &Memory) -> f64 {
-    if let Some(slot_name) = token.strip_prefix("mem") {
-        memory.get(slot_name)
-    } else {
-        token.parse::<f64>().unwrap()
+fn eval_token(token: &Token, memory: &Memory) -> f64 {
+    match token {
+        Token::Number(value) => *value, // 数値を表しているので、その値を返す
+        Token::MemoryRef(memory_name) => memory.get(memory_name), // メモリを表しているので、メモリの値を返す
+        _ => unreachable!(),                                      // 入力が正しいならここには来ない
     }
 }
 
-fn eval_expression(left: f64, operator: &str, right: f64) -> f64 {
+fn eval_expression(left: f64, operator: &Token, right: f64) -> f64 {
     match operator {
-        "+" => left + right,
-        "-" => left - right,
-        "*" => left * right,
-        "/" => left / right,
+        Token::Plus => left + right,
+        Token::Minus => left - right,
+        Token::Asterisk => left * right,
+        Token::Slash => left / right,
         _ => unreachable!(),
     }
 }
@@ -164,7 +166,7 @@ mod tests {
         let mut sut = Memory::new();
 
         // Act
-        let actual = sut.add("memHoge+", 123.0);
+        let actual = sut.add("Hoge", 123.0);
 
         // Assert
         assert_eq!(actual, 123.0);
@@ -175,10 +177,10 @@ mod tests {
     fn メモリに保存済の値に加算した数値を上書き保存できる() {
         // Arrange
         let mut sut = Memory::new();
-        sut.add("memFuga+", 111.1);
+        sut.add("Fuga", 111.1);
 
         // Act
-        let actual = sut.add("memFuga+", 123.45);
+        let actual = sut.add("Fuga", 123.45);
 
         // Assert
         assert_eq!(actual, 234.55);
@@ -189,10 +191,10 @@ mod tests {
     fn メモリに保存済の値から減算した数値を上書き保存できる() {
         // Arrange
         let mut sut = Memory::new();
-        sut.add("memPiyo+", 123.45);
+        sut.add("Piyo", 123.45);
 
         // Act
-        let actual = sut.add("memPiyo-", -123.45);
+        let actual = sut.add("Piyo", -123.45);
 
         // Assert
         assert_eq!(actual, 0.0);
@@ -253,10 +255,10 @@ mod tests {
     fn トークンとして数値を保存済のメモリ名が指定された場合に保存済の数値を取得できる() {
         // Arrange
         let mut memory = Memory::new();
-        memory.add("memTest+", 10_000.0);
+        memory.add("Test", 10_000.0);
 
         // Act
-        let actual = eval_token("memTest", &memory);
+        let actual = eval_token(&Token::MemoryRef("Test".to_string()), &memory);
 
         // Assert
         assert_eq!(actual, 10_000.0);
@@ -268,7 +270,7 @@ mod tests {
         let memory = Memory::new();
 
         // Act
-        let actual = eval_token("memTest", &memory);
+        let actual = eval_token(&Token::MemoryRef("Test".to_string()), &memory);
 
         // Assert
         assert_eq!(actual, 0.0);
@@ -280,7 +282,7 @@ mod tests {
         let _dummy = Memory::new();
 
         // Act
-        let actual = eval_token("-567.89", &_dummy);
+        let actual = eval_token(&Token::Number(-567.89), &_dummy);
 
         // Assert
         assert_eq!(actual, -567.89);
@@ -289,12 +291,12 @@ mod tests {
     #[test]
     fn 指定した演算子に基づいて二項の計算が正しく行われる() {
         // 加算
-        assert_eq!(eval_expression(1.0, "+", 2.0), 3.0);
+        assert_eq!(eval_expression(1.0, &Token::Plus, 2.0), 3.0);
         // 減算
-        assert_eq!(eval_expression(1.0, "-", 2.0), -1.0);
+        assert_eq!(eval_expression(1.0, &Token::Minus, 2.0), -1.0);
         // 乗算
-        assert_eq!(eval_expression(1.0, "*", 2.0), 2.0);
+        assert_eq!(eval_expression(1.0, &Token::Asterisk, 2.0), 2.0);
         // 除算
-        assert_eq!(eval_expression(1.0, "/", 2.0), 0.5);
+        assert_eq!(eval_expression(1.0, &Token::Slash, 2.0), 0.5);
     }
 }
