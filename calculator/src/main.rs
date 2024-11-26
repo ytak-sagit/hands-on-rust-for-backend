@@ -58,6 +58,8 @@ enum Token {
     Minus,
     Asterisk,
     Slash,
+    LParen, // 開き括弧
+    RParen, // 閉じ括弧
 }
 
 // NOTE: enum も実装できる
@@ -68,6 +70,8 @@ impl Token {
             "-" => Self::Minus,
             "*" => Self::Asterisk,
             "/" => Self::Slash,
+            "(" => Self::LParen,
+            ")" => Self::RParen,
             // NOTE: match 式は値の一致だけでなく、追加の条件式も書ける
             _ if value.starts_with("mem") => {
                 let mut memory_name = value[3..].to_string();
@@ -119,10 +123,7 @@ fn main() {
             }
             _ => {
                 // 式の値の計算
-                let left = eval_token(&tokens[0], &memory);
-                let operator = &tokens[1];
-                let right = eval_token(&tokens[2], &memory);
-                let current_result = eval_expression(left, operator, right);
+                let current_result = eval_expression(&tokens, &memory);
 
                 // 直前の計算結果として一時的に保存
                 previous_result = current_result;
@@ -138,21 +139,77 @@ fn print_output(value: f64) {
     println!("  => {}", value);
 }
 
-fn eval_token(token: &Token, memory: &Memory) -> f64 {
-    match token {
-        Token::Number(value) => *value, // 数値を表しているので、その値を返す
-        Token::MemoryRef(memory_name) => memory.get(memory_name), // メモリを表しているので、メモリの値を返す
-        _ => unreachable!(),                                      // 入力が正しいならここには来ない
-    }
+fn eval_expression(tokens: &[Token], memory: &Memory) -> f64 {
+    let (result, index) = eval_additive_expression(0, tokens, memory);
+    // 正しく計算できていたら、index は式の末尾を指しているはず
+    assert_eq!(tokens.len(), index);
+    result
 }
 
-fn eval_expression(left: f64, operator: &Token, right: f64) -> f64 {
-    match operator {
-        Token::Plus => left + right,
-        Token::Minus => left - right,
-        Token::Asterisk => left * right,
-        Token::Slash => left / right,
-        _ => unreachable!(),
+fn eval_additive_expression(index: usize, tokens: &[Token], memory: &Memory) -> (f64, usize) {
+    let mut index = index;
+    let mut result;
+    (result, index) = eval_mutliplicative_expression(index, tokens, memory);
+    while index < tokens.len() {
+        match &tokens[index] {
+            Token::Plus => {
+                let (value, next) = eval_mutliplicative_expression(index + 1, tokens, memory);
+                result += value;
+                index = next;
+            }
+            Token::Minus => {
+                let (value, next) = eval_mutliplicative_expression(index + 1, tokens, memory);
+                result -= value;
+                index = next;
+            }
+            _ => break,
+        }
+    }
+    (result, index)
+}
+
+fn eval_mutliplicative_expression(index: usize, tokens: &[Token], memory: &Memory) -> (f64, usize) {
+    let mut index = index;
+    let mut result;
+    (result, index) = eval_primary_expression(index, tokens, memory);
+    while index < tokens.len() {
+        match &tokens[index] {
+            Token::Asterisk => {
+                let (value, next) = eval_primary_expression(index + 1, tokens, memory);
+                result *= value;
+                index = next;
+            }
+            Token::Slash => {
+                let (value, next) = eval_primary_expression(index + 1, tokens, memory);
+                result /= value;
+                index = next;
+            }
+            _ => break,
+        }
+    }
+    (result, index)
+}
+
+fn eval_primary_expression(index: usize, tokens: &[Token], memory: &Memory) -> (f64, usize) {
+    let first_token = &tokens[index];
+    match first_token {
+        Token::LParen => {
+            // 開き括弧で始まっているので、括弧の次のトークンから式を計算する
+            let (result, next) = eval_additive_expression(index + 1, tokens, memory);
+            // tokens[index] は閉じ括弧になっているはず
+            assert_eq!(Token::RParen, tokens[next]);
+            // 閉じ括弧の分だけ1トークン進めた位置を返す
+            (result, next + 1)
+        }
+        Token::Number(value) => {
+            // 数値を表しているので、その値と次の位置を返す
+            (*value, index + 1)
+        }
+        Token::MemoryRef(memory_name) => {
+            // メモリを表しているので、メモリの値と次の位置を返す
+            (memory.get(memory_name), index + 1)
+        }
+        _ => unreachable!(), // 入力が正しいならここには来ない
     }
 }
 
@@ -252,51 +309,131 @@ mod tests {
     }
 
     #[test]
-    fn トークンとして数値を保存済のメモリ名が指定された場合に保存済の数値を取得できる() {
-        // Arrange
-        let mut memory = Memory::new();
-        memory.add("Test", 10_000.0);
-
-        // Act
-        let actual = eval_token(&Token::MemoryRef("Test".to_string()), &memory);
-
-        // Assert
-        assert_eq!(actual, 10_000.0);
-    }
-
-    #[test]
-    fn トークンとして数値を未保存のメモリ名が指定された場合にデフォルト値を取得できる() {
-        // Arrange
-        let memory = Memory::new();
-
-        // Act
-        let actual = eval_token(&Token::MemoryRef("Test".to_string()), &memory);
-
-        // Assert
-        assert_eq!(actual, 0.0);
-    }
-
-    #[test]
-    fn トークンとして数値が指定された場合にその数値を取得できる() {
-        // Arrange
-        let _dummy = Memory::new();
-
-        // Act
-        let actual = eval_token(&Token::Number(-567.89), &_dummy);
-
-        // Assert
-        assert_eq!(actual, -567.89);
+    fn トークン列の分割ができる_括弧入り() {
+        assert_eq!(
+            Token::split("( 1 + memTEST ) / 10"),
+            vec![
+                Token::LParen,
+                Token::Number(1.0),
+                Token::Plus,
+                Token::MemoryRef("TEST".to_string()),
+                Token::RParen,
+                Token::Slash,
+                Token::Number(10.0),
+            ]
+        );
     }
 
     #[test]
     fn 指定した演算子に基づいて二項の計算が正しく行われる() {
+        let _dummy = Memory::new();
         // 加算
-        assert_eq!(eval_expression(1.0, &Token::Plus, 2.0), 3.0);
+        assert_eq!(
+            eval_expression(
+                &[Token::Number(1.0), Token::Plus, Token::Number(2.0)],
+                &_dummy
+            ),
+            3.0
+        );
         // 減算
-        assert_eq!(eval_expression(1.0, &Token::Minus, 2.0), -1.0);
+        assert_eq!(
+            eval_expression(
+                &[Token::Number(1.0), Token::Minus, Token::Number(2.0)],
+                &_dummy
+            ),
+            -1.0
+        );
         // 乗算
-        assert_eq!(eval_expression(1.0, &Token::Asterisk, 2.0), 2.0);
+        assert_eq!(
+            eval_expression(
+                &[Token::Number(1.0), Token::Asterisk, Token::Number(2.0)],
+                &_dummy
+            ),
+            2.0
+        );
         // 除算
-        assert_eq!(eval_expression(1.0, &Token::Slash, 2.0), 0.5);
+        assert_eq!(
+            eval_expression(
+                &[Token::Number(1.0), Token::Slash, Token::Number(2.0)],
+                &_dummy
+            ),
+            0.5
+        );
+    }
+
+    #[test]
+    fn 指定したトークン列で表される式の計算が正しく行われる() {
+        let _dummy = Memory::new();
+        // 複雑な計算 (1 * 2 * 3 - 4 * 5 + 6 * 7 + 8 * 9)
+        assert_eq!(
+            eval_expression(
+                &[
+                    Token::Number(1.0),
+                    Token::Asterisk,
+                    Token::Number(2.0),
+                    Token::Asterisk,
+                    Token::Number(3.0),
+                    Token::Minus,
+                    Token::Number(4.0),
+                    Token::Asterisk,
+                    Token::Number(5.0),
+                    Token::Plus,
+                    Token::Number(6.0),
+                    Token::Asterisk,
+                    Token::Number(7.0),
+                    Token::Plus,
+                    Token::Number(8.0),
+                    Token::Asterisk,
+                    Token::Number(9.0),
+                ],
+                &_dummy
+            ),
+            100.0
+        );
+        // 括弧入り [1 + 2 + 3 + 4 + ( 5 + 6 + 7 - 8) * 9]
+        assert_eq!(
+            eval_expression(
+                &[
+                    Token::Number(1.0),
+                    Token::Plus,
+                    Token::Number(2.0),
+                    Token::Plus,
+                    Token::Number(3.0),
+                    Token::Plus,
+                    Token::Number(4.0),
+                    Token::Plus,
+                    Token::LParen,
+                    Token::Number(5.0),
+                    Token::Plus,
+                    Token::Number(6.0),
+                    Token::Plus,
+                    Token::Number(7.0),
+                    Token::Minus,
+                    Token::Number(8.0),
+                    Token::RParen,
+                    Token::Asterisk,
+                    Token::Number(9.0),
+                ],
+                &_dummy
+            ),
+            100.0
+        );
+        // メモリ参照 (memA(4.7) + 3 * memB(1))
+        let mut memory = Memory::new();
+        memory.add("A", 4.7);
+        memory.add("B", 1.0);
+        assert_eq!(
+            eval_expression(
+                &[
+                    Token::MemoryRef("A".to_string()),
+                    Token::Plus,
+                    Token::Number(3.0),
+                    Token::Asterisk,
+                    Token::MemoryRef("B".to_string()),
+                ],
+                &memory
+            ),
+            7.7
+        );
     }
 }
