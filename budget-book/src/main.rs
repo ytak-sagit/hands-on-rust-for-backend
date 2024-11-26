@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use clap::{Args, Parser, Subcommand};
 use csv::{Reader, Writer, WriterBuilder};
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
+use std::{collections::HashMap, fs::OpenOptions};
 
 #[derive(Parser)]
 #[clap(version = "1.0")]
@@ -22,7 +22,7 @@ enum Command {
     /// CSV からインポートする
     Import(ImportArgs),
     /// レポートを出力する
-    Report,
+    Report(ReportArgs),
 }
 
 #[derive(Args)]
@@ -121,6 +121,28 @@ struct Record {
     金額: i32,
 }
 
+#[derive(Args)]
+struct ReportArgs {
+    files: Vec<String>,
+}
+impl ReportArgs {
+    /// report サブコマンドの本体処理
+    fn run(&self) {
+        let mut map = HashMap::new();
+        for file in self.files.iter() {
+            let mut reader = Reader::from_path(file).unwrap();
+            for result in reader.records() {
+                let record = result.unwrap();
+                let date = record[0].parse::<NaiveDate>().unwrap();
+                let amount = record[2].parse::<i32>().unwrap();
+                let sum = map.entry(date.format("%Y-%m").to_string()).or_insert(0);
+                *sum += amount;
+            }
+        }
+        println!("{:?}", map);
+    }
+}
+
 fn main() {
     // 構造体 App で定義した形のサブコマンドを受け取ることを期待して parse を行う
     let args = App::parse();
@@ -129,6 +151,6 @@ fn main() {
         Command::Deposit(args) => args.run(),
         Command::Withdraw(args) => args.run(),
         Command::Import(args) => args.run(),
-        Command::Report => unimplemented!(),
+        Command::Report(args) => args.run(),
     }
 }
