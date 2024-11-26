@@ -10,6 +10,7 @@
                 "Swellaby.vscode-rust-test-adapter", // Rust 用テストエクスプローラー
                 "JScearcy.rust-doc-viewer", // ローカルで生成された Rust ドキュメント用ビューワ
                 "rust-lang.rust-analyzer", // Rust の入力補完や文法ミスチェック等
+                "github.vscode-github-actions", // GitHub Actions
                 "mhutchie.git-graph" // Git Graph
             ]
         }
