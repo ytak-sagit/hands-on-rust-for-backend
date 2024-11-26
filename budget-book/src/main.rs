@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use clap::{Args, Parser, Subcommand};
-use csv::{Reader, Writer};
+use csv::{Reader, Writer, WriterBuilder};
+use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 
 #[derive(Parser)]
@@ -98,16 +99,26 @@ impl ImportArgs {
     fn run(&self) {
         let dst_file_name = format!("{}.csv", self.dst_account_name);
         let open_option = OpenOptions::new().append(true).open(dst_file_name).unwrap();
-        let mut writer = Writer::from_writer(open_option);
+        let mut writer = WriterBuilder::new()
+            .has_headers(false) // 1行目のヘッダーをスキップ
+            .from_writer(open_option);
 
         let mut reader = Reader::from_path(&self.src_file_name).unwrap();
-        for result in reader.records() {
+        for result in reader.deserialize() {
             // Reader は先頭行をヘッダーとして扱うので、ループは2行目以降について実行される
-            let record = result.unwrap();
-            writer.write_record(&record).unwrap();
+
+            // CSV の各行が Record 型として読み取れることを想定
+            let record: Record = result.unwrap();
+            writer.serialize(record).unwrap();
         }
-        writer.flush().unwrap();
     }
+}
+
+#[derive(Serialize, Deserialize)]
+struct Record {
+    日付: NaiveDate,
+    用途: String,
+    金額: i32,
 }
 
 fn main() {
