@@ -10,6 +10,7 @@
         "hello_world/Cargo.toml",
         "arithmetic-operations-quiz/Cargo.toml",
         "simple-poker/Cargo.toml",
-        "calculator/Cargo.toml"
+        "calculator/Cargo.toml",
+        "budget-book/Cargo.toml"
     ]
 }
