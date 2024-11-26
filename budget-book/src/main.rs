@@ -23,5 +23,12 @@ enum Command {
 
 fn main() {
     // 構造体 App で定義した形のサブコマンドを受け取ることを期待して parse を行う
-    let _args = App::parse();
+    let args = App::parse();
+    match args.command {
+        Command::New => unimplemented!(),
+        Command::Deposit => unimplemented!(),
+        Command::Withdraw => unimplemented!(),
+        Command::Import => unimplemented!(),
+        Command::Report => unimplemented!(),
+    }
 }
