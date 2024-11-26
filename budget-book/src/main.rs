@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 use clap::{Args, Parser, Subcommand};
-use csv::Writer;
+use csv::{Reader, Writer};
 use std::fs::OpenOptions;
 
 #[derive(Parser)]
@@ -19,7 +19,7 @@ enum Command {
     /// 口座から出金する
     Withdraw(WithdrawArgs),
     /// CSV からインポートする
-    Import,
+    Import(ImportArgs),
     /// レポートを出力する
     Report,
 }
@@ -88,6 +88,28 @@ impl WithdrawArgs {
     }
 }
 
+#[derive(Args)]
+struct ImportArgs {
+    src_file_name: String,
+    dst_account_name: String,
+}
+impl ImportArgs {
+    /// import サブコマンドの本体処理
+    fn run(&self) {
+        let dst_file_name = format!("{}.csv", self.dst_account_name);
+        let open_option = OpenOptions::new().append(true).open(dst_file_name).unwrap();
+        let mut writer = Writer::from_writer(open_option);
+
+        let mut reader = Reader::from_path(&self.src_file_name).unwrap();
+        for result in reader.records() {
+            // Reader は先頭行をヘッダーとして扱うので、ループは2行目以降について実行される
+            let record = result.unwrap();
+            writer.write_record(&record).unwrap();
+        }
+        writer.flush().unwrap();
+    }
+}
+
 fn main() {
     // 構造体 App で定義した形のサブコマンドを受け取ることを期待して parse を行う
     let args = App::parse();
@@ -95,7 +117,7 @@ fn main() {
         Command::New(args) => args.run(),
         Command::Deposit(args) => args.run(),
         Command::Withdraw(args) => args.run(),
-        Command::Import => unimplemented!(),
+        Command::Import(args) => args.run(),
         Command::Report => unimplemented!(),
     }
 }
