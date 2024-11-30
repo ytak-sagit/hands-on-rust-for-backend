@@ -36,3 +36,21 @@ impl Bookshelf {
         todo!("Implement `Bookshelf::take_all_books`");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Book, Bookshelf};
+
+    #[test]
+    fn should_be_fuzzy_searched_books() {
+        let book1 = Book::new("すごいぞChatGPT！AIを使って学ぼうRust！", "山田太郎");
+        let book2 = Book::new("Pythonプログラミング入門", "田中花子");
+
+        let mut shelf = Bookshelf::new();
+        shelf.add_book(book1);
+        shelf.add_book(book2);
+
+        let found_books = shelf.search_books("chatgpt");
+        println!("{:?}", found_books);
+    }
+}
