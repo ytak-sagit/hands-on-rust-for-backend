@@ -1,10 +1,11 @@
+#[derive(Debug)]
 pub struct Book {
-    title: String,
-    author: String,
+    pub title: String,
+    pub author: String,
 }
 
 impl Book {
-    fn new(title: &str, author: &str) -> Self {
+    pub fn new(title: &str, author: &str) -> Self {
         Self {
             title: title.to_string(),
             author: author.to_string(),
