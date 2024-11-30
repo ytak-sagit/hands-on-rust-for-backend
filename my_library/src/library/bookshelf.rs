@@ -34,7 +34,7 @@ impl Bookshelf {
             .collect()
     }
 
-    pub fn remove_book(&self, book: Book) -> Option<Book> {
+    pub fn remove_book(&self, _book: Book) -> Option<Book> {
         todo!("Implement `Bookshelf::remove_book`");
     }
 
