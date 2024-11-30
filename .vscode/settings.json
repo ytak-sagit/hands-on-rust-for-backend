@@ -11,6 +11,9 @@
         "arithmetic-operations-quiz/Cargo.toml",
         "simple-poker/Cargo.toml",
         "calculator/Cargo.toml",
-        "budget-book/Cargo.toml"
+        "budget-book/Cargo.toml",
+        "my_package/Cargo.toml",
+        "my_library/Cargo.toml",
+        "another_bin/Cargo.toml"
     ]
 }
