@@ -8,6 +8,12 @@ pub struct Bookshelf {
     matcher: SkimMatcherV2,
 }
 
+impl Default for Bookshelf {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Bookshelf {
     pub fn new() -> Self {
         let matcher = SkimMatcherV2::default();
@@ -46,7 +52,7 @@ mod tests {
         let book1 = Book::new("すごいぞChatGPT！AIを使って学ぼうRust！", "山田太郎");
         let book2 = Book::new("Pythonプログラミング入門", "田中花子");
 
-        let mut shelf = Bookshelf::new();
+        let mut shelf = Bookshelf::default();
         shelf.add_book(book1);
         shelf.add_book(book2);
 
