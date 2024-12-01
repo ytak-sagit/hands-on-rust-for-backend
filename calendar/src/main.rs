@@ -59,6 +59,17 @@ enum MyError {
     Io(std::io::Error),
     Json(serde_json::Error),
 }
+// NOTE: From トレイトが実装されている場合、? で独自エラー型に自動変換してくれる
+impl From<std::io::Error> for MyError {
+    fn from(error: std::io::Error) -> Self {
+        MyError::Io(error)
+    }
+}
+impl From<serde_json::Error> for MyError {
+    fn from(error: serde_json::Error) -> Self {
+        MyError::Json(error)
+    }
+}
 
 fn main() {
     match read_calendar() {
@@ -115,9 +126,9 @@ fn read_calendar() -> Result<Calendar, std::io::Error> {
 
 fn save_calendar(calendar: &Calendar) -> Result<(), MyError> {
     // NOTE: map_err() によって独自のエラー型にマッピングできる
-    let file = File::create("schedule.json").map_err(MyError::Io)?;
+    let file = File::create("schedule.json")?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, calendar).map_err(MyError::Json)?;
+    serde_json::to_writer(writer, calendar)?;
     Ok(())
 }
 
