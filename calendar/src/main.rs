@@ -17,6 +17,11 @@ struct Schedule {
     /// 終了時刻
     end: NaiveDateTime,
 }
+impl Schedule {
+    fn intersects(&self, other: &Schedule) -> bool {
+        self.start < other.end && other.start < self.end
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct Calendar {
@@ -91,6 +96,14 @@ fn add_schedule(subject: String, start: NaiveDateTime, end: NaiveDateTime) {
         start,
         end,
     };
+
+    // 予定の重複判定
+    for schedule in &calendar.schedules {
+        if schedule.intersects(&new_schedule) {
+            println!("エラー：予定が重複しています");
+            return;
+        }
+    }
 
     // 予定の追加
     calendar.schedules.push(new_schedule);
