@@ -14,6 +14,7 @@
         "budget-book/Cargo.toml",
         "my_package/Cargo.toml",
         "my_library/Cargo.toml",
-        "another_bin/Cargo.toml"
+        "another_bin/Cargo.toml",
+        "calendar/Cargo.toml"
     ]
 }
