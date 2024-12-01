@@ -55,6 +55,7 @@ enum Commands {
     },
 }
 
+#[derive(Debug)]
 enum MyError {
     Io(std::io::Error),
     Json(serde_json::Error),
@@ -116,11 +117,11 @@ fn run_command(mut calendar: Calendar) {
     }
 }
 
-fn read_calendar() -> Result<Calendar, std::io::Error> {
+fn read_calendar() -> Result<Calendar, MyError> {
     // NOTE: Result 型の後ろに ? を付けることで、Err が返る場合はそのまま返すことができる
     let file = File::open("schedule.json")?;
     let reader = BufReader::new(file);
-    let calendar = serde_json::from_reader(reader).unwrap();
+    let calendar = serde_json::from_reader(reader)?;
     Ok(calendar)
 }
 
