@@ -62,44 +62,46 @@ enum MyError {
 
 fn main() {
     match read_calendar() {
-        Ok(mut calendar) => {
-            let options = Cli::parse();
-            match options.command {
-                Commands::List => show_list(calendar),
-                Commands::Add {
-                    subject,
-                    start,
-                    end,
-                } => {
-                    if add_schedule(&mut calendar, subject, start, end) {
-                        match save_calendar(&calendar) {
-                            Ok(_) => println!("予定を追加しました。"),
-                            Err(error) => match error {
-                                MyError::Io(error) => {
-                                    println!("カレンダーの読み込みに失敗しました：{:?}", error)
-                                }
-                                MyError::Json(error) => {
-                                    println!("予定の追加に失敗しました：{:?}", error)
-                                }
-                            },
+        Ok(calendar) => run_command(calendar),
+        Err(error) => println!("カレンダーの読み込みに失敗しました：{:?}", error),
+    }
+}
+
+fn run_command(mut calendar: Calendar) {
+    let options = Cli::parse();
+    match options.command {
+        Commands::List => show_list(calendar),
+        Commands::Add {
+            subject,
+            start,
+            end,
+        } => {
+            if add_schedule(&mut calendar, subject, start, end) {
+                match save_calendar(&calendar) {
+                    Ok(_) => println!("予定を追加しました。"),
+                    Err(error) => match error {
+                        MyError::Io(error) => {
+                            println!("カレンダーの読み込みに失敗しました：{:?}", error)
                         }
-                    } else {
-                        println!("エラー：予定が重複しています");
-                    }
-                }
-                Commands::Delete { id } => {
-                    if delete_schedule(&mut calendar, id) {
-                        match save_calendar(&calendar) {
-                            Ok(_) => println!("予定を削除しました。"),
-                            Err(_) => println!("エラー：予定の削除に失敗しました"),
+                        MyError::Json(error) => {
+                            println!("予定の追加に失敗しました：{:?}", error)
                         }
-                    } else {
-                        println!("エラー：IDが不正です");
-                    }
+                    },
                 }
+            } else {
+                println!("エラー：予定が重複しています");
             }
         }
-        Err(error) => println!("カレンダーの読み込みに失敗しました：{:?}", error),
+        Commands::Delete { id } => {
+            if delete_schedule(&mut calendar, id) {
+                match save_calendar(&calendar) {
+                    Ok(_) => println!("予定を削除しました。"),
+                    Err(_) => println!("エラー：予定の削除に失敗しました"),
+                }
+            } else {
+                println!("エラー：IDが不正です");
+            }
+        }
     }
 }
 
