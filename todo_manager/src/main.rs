@@ -26,10 +26,17 @@ async fn get_hello_name(name: web::Path<String>) -> HttpResponse {
 
 #[derive(Template)]
 #[template(path = "todo.html")]
-struct TodoTemplate {}
+struct TodoTemplate {
+    tasks: Vec<String>,
+}
 
 #[get("/")]
 async fn get_todo() -> HttpResponse {
-    let todo = TodoTemplate {};
+    let tasks = vec![
+        "タスク1".to_string(),
+        "タスク2".to_string(),
+        "タスク3".to_string(),
+    ];
+    let todo = TodoTemplate { tasks };
     todo.to_response()
 }

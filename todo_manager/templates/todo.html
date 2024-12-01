@@ -6,8 +6,9 @@
 
 <body>
     <ul>
-        <li>タスク1</li>
-        <li>タスク2</li>
+        {% for task in tasks %}
+        <li>{{ task }}</li>
+        {% endfor %}
     </ul>
 </body>
 
