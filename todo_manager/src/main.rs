@@ -1,13 +1,48 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer};
 use askama::Template;
 use askama_actix::TemplateToResponse;
+use sqlx::{Pool, Row, Sqlite, SqlitePool};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(get_hello_name).service(get_todo))
-        .bind(("127.0.0.1", 8080))?
-        .run()
+    let pool = SqlitePool::connect("sqlite::memory:").await.unwrap();
+    initialize_db(&pool).await.unwrap();
+
+    // NOTE: サーバーに組み込みたい変数を web::Data に詰め込む
+    // NOTE: move を付けることで、クロージャ内からアクセスできるようになる（この場合は get_todo() 等の中から pool にアクセスできる）
+    HttpServer::new(move || {
+        App::new()
+            .service(get_hello_name)
+            .service(get_todo)
+            .app_data(web::Data::new(pool.clone()))
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+}
+
+async fn initialize_db(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
+    // tasks テーブル作成
+    sqlx::query("CREATE TABLE tasks (task TEXT)")
+        .execute(pool)
         .await
+        .unwrap();
+
+    // 初期データ挿入
+    sqlx::query("INSERT INTO tasks (task) VALUES ('タスク1')")
+        .execute(pool)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO tasks (task) VALUES ('タスク2')")
+        .execute(pool)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO tasks (task) VALUES ('タスク3')")
+        .execute(pool)
+        .await
+        .unwrap();
+
+    Ok(())
 }
 
 #[derive(Template)]
@@ -31,12 +66,15 @@ struct TodoTemplate {
 }
 
 #[get("/")]
-async fn get_todo() -> HttpResponse {
-    let tasks = vec![
-        "タスク1".to_string(),
-        "タスク2".to_string(),
-        "タスク3".to_string(),
-    ];
+async fn get_todo(pool: web::Data<SqlitePool>) -> HttpResponse {
+    let rows = sqlx::query("SELECT task FROM tasks;")
+        .fetch_all(pool.as_ref())
+        .await
+        .unwrap();
+    let tasks = rows
+        .iter()
+        .map(|row| row.get::<String, _>("task"))
+        .collect();
     let todo = TodoTemplate { tasks };
     todo.to_response()
 }
