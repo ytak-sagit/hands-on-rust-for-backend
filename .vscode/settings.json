@@ -15,6 +15,7 @@
         "my_package/Cargo.toml",
         "my_library/Cargo.toml",
         "another_bin/Cargo.toml",
-        "calendar/Cargo.toml"
+        "calendar/Cargo.toml",
+        "todo_manager/Cargo.toml"
     ]
 }
