@@ -94,7 +94,9 @@ async fn to_done_todo(pool: web::Data<SqlitePool>, form: web::Form<DoneTask>) ->
         .execute(pool.as_ref())
         .await
         .unwrap();
-    HttpResponse::Ok().finish()
+    HttpResponse::Found()
+        .append_header(("Location", "/"))
+        .finish()
 }
 
 #[derive(serde::Deserialize)]
@@ -110,5 +112,7 @@ async fn create_todo(pool: web::Data<SqlitePool>, form: web::Form<CreateTask>) -
         .execute(pool.as_ref())
         .await
         .unwrap();
-    HttpResponse::Ok().finish()
+    HttpResponse::Found()
+        .append_header(("Location", "/"))
+        .finish()
 }
