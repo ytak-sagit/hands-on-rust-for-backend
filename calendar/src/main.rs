@@ -48,6 +48,11 @@ enum Commands {
         /// 終了時刻
         end: NaiveDateTime,
     },
+    /// 予定の削除
+    Delete {
+        /// 予定のID
+        id: u64,
+    },
 }
 
 fn main() {
@@ -59,6 +64,7 @@ fn main() {
             start,
             end,
         } => add_schedule(subject, start, end),
+        Commands::Delete { id } => delete_schedule(id),
     }
 }
 
@@ -113,6 +119,33 @@ fn add_schedule(subject: String, start: NaiveDateTime, end: NaiveDateTime) {
     let writer = BufWriter::new(file);
     serde_json::to_writer(writer, &calendar).unwrap();
     println!("予定を追加しました。");
+}
+
+fn delete_schedule(id: u64) {
+    // 予定の読み込み
+    let mut calendar: Calendar = {
+        let file = File::open("schedule.json").unwrap();
+        let reader = BufReader::new(file);
+        serde_json::from_reader(reader).unwrap()
+    };
+
+    // 予定の削除
+    if let Some(index) = calendar
+        .schedules
+        .iter()
+        .position(|schedule| schedule.id == id)
+    {
+        calendar.schedules.remove(index);
+    } else {
+        println!("エラー：IDが不正です");
+        return;
+    }
+
+    // 予定の保存
+    let file = File::create("schedule.json").unwrap();
+    let writer = BufWriter::new(file);
+    serde_json::to_writer(writer, &calendar).unwrap();
+    println!("予定を削除しました。");
 }
 
 #[cfg(test)]
