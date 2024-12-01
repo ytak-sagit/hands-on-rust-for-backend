@@ -56,26 +56,32 @@ enum Commands {
 }
 
 fn main() {
-    let options = Cli::parse();
-    match options.command {
-        Commands::List => show_list(),
-        Commands::Add {
-            subject,
-            start,
-            end,
-        } => add_schedule(subject, start, end),
-        Commands::Delete { id } => delete_schedule(id),
+    match read_calendar() {
+        Ok(calendar) => {
+            let options = Cli::parse();
+            match options.command {
+                Commands::List => show_list(calendar),
+                Commands::Add {
+                    subject,
+                    start,
+                    end,
+                } => add_schedule(calendar, subject, start, end),
+                Commands::Delete { id } => delete_schedule(calendar, id),
+            }
+        }
+        Err(error) => println!("カレンダーの読み込みに失敗しました：{:?}", error),
     }
 }
 
-fn show_list() {
-    // 予定の読み込み
-    let calendar: Calendar = {
-        let file = File::open("schedule.json").unwrap();
-        let reader = BufReader::new(file);
-        serde_json::from_reader(reader).unwrap()
-    };
+fn read_calendar() -> Result<Calendar, std::io::Error> {
+    // NOTE: Result 型の後ろに ? を付けることで、Err が返る場合はそのまま返すことができる
+    let file = File::open("schedule.json")?;
+    let reader = BufReader::new(file);
+    let calendar = serde_json::from_reader(reader).unwrap();
+    Ok(calendar)
+}
 
+fn show_list(calendar: Calendar) {
     // 予定の表示
     println!("ID\tSTART\tEND\tSUBJECT");
     for schedule in calendar.schedules {
@@ -86,14 +92,7 @@ fn show_list() {
     }
 }
 
-fn add_schedule(subject: String, start: NaiveDateTime, end: NaiveDateTime) {
-    // 予定の読み込み
-    let mut calendar: Calendar = {
-        let file = File::open("schedule.json").unwrap();
-        let reader = BufReader::new(file);
-        serde_json::from_reader(reader).unwrap()
-    };
-
+fn add_schedule(mut calendar: Calendar, subject: String, start: NaiveDateTime, end: NaiveDateTime) {
     // 予定の作成
     let id = calendar.schedules.len() as u64;
     let new_schedule = Schedule {
@@ -121,14 +120,7 @@ fn add_schedule(subject: String, start: NaiveDateTime, end: NaiveDateTime) {
     println!("予定を追加しました。");
 }
 
-fn delete_schedule(id: u64) {
-    // 予定の読み込み
-    let mut calendar: Calendar = {
-        let file = File::open("schedule.json").unwrap();
-        let reader = BufReader::new(file);
-        serde_json::from_reader(reader).unwrap()
-    };
-
+fn delete_schedule(mut calendar: Calendar, id: u64) {
     // 予定の削除
     if let Some(index) = calendar
         .schedules
