@@ -228,4 +228,45 @@ mod tests {
         };
         assert_eq!(should_intersect, schedule.intersects(&new_schedule));
     }
+
+    #[test]
+    fn test_add_schedule() {
+        // Arrange
+        let expected = Calendar {
+            schedules: vec![
+                Schedule {
+                    id: 0,
+                    subject: "テスト予定".to_string(),
+                    start: naive_date_time(2023, 11, 19, 11, 22, 33),
+                    end: naive_date_time(2023, 11, 19, 22, 33, 44),
+                },
+                Schedule {
+                    id: 1,
+                    subject: "テスト予定2".to_string(),
+                    start: naive_date_time(2023, 12, 8, 9, 0, 0),
+                    end: naive_date_time(2023, 12, 8, 10, 30, 0),
+                },
+            ],
+        };
+        let mut calendar = Calendar {
+            schedules: vec![Schedule {
+                id: 0,
+                subject: "テスト予定".to_string(),
+                start: naive_date_time(2023, 11, 19, 11, 22, 33),
+                end: naive_date_time(2023, 11, 19, 22, 33, 44),
+            }],
+        };
+
+        // Act
+        let actual = add_schedule(
+            &mut calendar,
+            "テスト予定2".to_string(),
+            naive_date_time(2023, 12, 8, 9, 0, 0),
+            naive_date_time(2023, 12, 8, 10, 30, 0),
+        );
+
+        // Assert
+        assert!(actual);
+        assert_eq!(expected, calendar);
+    }
 }
