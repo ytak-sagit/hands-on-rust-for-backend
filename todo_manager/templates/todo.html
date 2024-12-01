@@ -5,11 +5,13 @@
 </head>
 
 <body>
-    <ul>
-        {% for task in tasks %}
-        <li>{{ task }}</li>
-        {% endfor %}
-    </ul>
+    <form action="/done" method="post">
+        <ul>
+            {% for task in tasks %}
+            <li>{{ task }}<button type="submit" name="id" value="{{ task }}">Done</button></li>
+            {% endfor %}
+        </ul>
+    </form>
 </body>
 
 </html>
