@@ -15,6 +15,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_hello_name)
             .service(get_todo)
             .service(to_done_todo)
+            .service(create_todo)
             .app_data(web::Data::new(pool.clone()))
     })
     .bind(("127.0.0.1", 8080))?
@@ -90,6 +91,22 @@ async fn to_done_todo(pool: web::Data<SqlitePool>, form: web::Form<DoneTask>) ->
     let done_task = form.into_inner();
     sqlx::query("DELETE FROM tasks WHERE task = ?")
         .bind(done_task.id) // NOTE: 以降、参照しないので、& を付けなくてもコンパイルエラーにならない
+        .execute(pool.as_ref())
+        .await
+        .unwrap();
+    HttpResponse::Ok().finish()
+}
+
+#[derive(serde::Deserialize)]
+struct CreateTask {
+    task: String,
+}
+
+#[post("/create")]
+async fn create_todo(pool: web::Data<SqlitePool>, form: web::Form<CreateTask>) -> HttpResponse {
+    let create_task = form.into_inner();
+    sqlx::query("INSERT INTO tasks (task) VALUES (?)")
+        .bind(create_task.task)
         .execute(pool.as_ref())
         .await
         .unwrap();
