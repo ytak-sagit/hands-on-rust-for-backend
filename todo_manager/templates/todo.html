@@ -1,0 +1,21 @@
+<html>
+
+<head>
+    <title>TODO</title>
+</head>
+
+<body>
+    <form action="/done" method="post">
+        <ul>
+            {% for task in tasks %}
+            <li>{{ task }} &nbsp; <button type="submit" name="id" value="{{ task }}">Done</button></li>
+            {% endfor %}
+        </ul>
+    </form>
+    <form action="/create" method="post">
+        <input type="text" name="task" />
+        <button type="submit">Create</button>
+    </form>
+</body>
+
+</html>
