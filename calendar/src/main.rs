@@ -55,9 +55,14 @@ enum Commands {
     },
 }
 
+enum MyError {
+    Io(std::io::Error),
+    Json(serde_json::Error),
+}
+
 fn main() {
     match read_calendar() {
-        Ok(calendar) => {
+        Ok(mut calendar) => {
             let options = Cli::parse();
             match options.command {
                 Commands::List => show_list(calendar),
@@ -65,8 +70,33 @@ fn main() {
                     subject,
                     start,
                     end,
-                } => add_schedule(calendar, subject, start, end),
-                Commands::Delete { id } => delete_schedule(calendar, id),
+                } => {
+                    if add_schedule(&mut calendar, subject, start, end) {
+                        match save_calendar(&calendar) {
+                            Ok(_) => println!("予定を追加しました。"),
+                            Err(error) => match error {
+                                MyError::Io(error) => {
+                                    println!("カレンダーの読み込みに失敗しました：{:?}", error)
+                                }
+                                MyError::Json(error) => {
+                                    println!("予定の追加に失敗しました：{:?}", error)
+                                }
+                            },
+                        }
+                    } else {
+                        println!("エラー：予定が重複しています");
+                    }
+                }
+                Commands::Delete { id } => {
+                    if delete_schedule(&mut calendar, id) {
+                        match save_calendar(&calendar) {
+                            Ok(_) => println!("予定を削除しました。"),
+                            Err(_) => println!("エラー：予定の削除に失敗しました"),
+                        }
+                    } else {
+                        println!("エラー：IDが不正です");
+                    }
+                }
             }
         }
         Err(error) => println!("カレンダーの読み込みに失敗しました：{:?}", error),
@@ -81,6 +111,14 @@ fn read_calendar() -> Result<Calendar, std::io::Error> {
     Ok(calendar)
 }
 
+fn save_calendar(calendar: &Calendar) -> Result<(), MyError> {
+    // NOTE: map_err() によって独自のエラー型にマッピングできる
+    let file = File::create("schedule.json").map_err(MyError::Io)?;
+    let writer = BufWriter::new(file);
+    serde_json::to_writer(writer, calendar).map_err(MyError::Json)?;
+    Ok(())
+}
+
 fn show_list(calendar: Calendar) {
     // 予定の表示
     println!("ID\tSTART\tEND\tSUBJECT");
@@ -92,7 +130,12 @@ fn show_list(calendar: Calendar) {
     }
 }
 
-fn add_schedule(mut calendar: Calendar, subject: String, start: NaiveDateTime, end: NaiveDateTime) {
+fn add_schedule(
+    calendar: &mut Calendar,
+    subject: String,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
+) -> bool {
     // 予定の作成
     let id = calendar.schedules.len() as u64;
     let new_schedule = Schedule {
@@ -105,22 +148,16 @@ fn add_schedule(mut calendar: Calendar, subject: String, start: NaiveDateTime, e
     // 予定の重複判定
     for schedule in &calendar.schedules {
         if schedule.intersects(&new_schedule) {
-            println!("エラー：予定が重複しています");
-            return;
+            return false;
         }
     }
 
     // 予定の追加
     calendar.schedules.push(new_schedule);
-
-    // 予定の保存
-    let file = File::create("schedule.json").unwrap();
-    let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, &calendar).unwrap();
-    println!("予定を追加しました。");
+    true
 }
 
-fn delete_schedule(mut calendar: Calendar, id: u64) {
+fn delete_schedule(calendar: &mut Calendar, id: u64) -> bool {
     // 予定の削除
     if let Some(index) = calendar
         .schedules
@@ -128,16 +165,10 @@ fn delete_schedule(mut calendar: Calendar, id: u64) {
         .position(|schedule| schedule.id == id)
     {
         calendar.schedules.remove(index);
+        true
     } else {
-        println!("エラー：IDが不正です");
-        return;
+        false
     }
-
-    // 予定の保存
-    let file = File::create("schedule.json").unwrap();
-    let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, &calendar).unwrap();
-    println!("予定を削除しました。");
 }
 
 #[cfg(test)]
