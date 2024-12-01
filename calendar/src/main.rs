@@ -55,22 +55,17 @@ enum Commands {
     },
 }
 
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 enum MyError {
-    Io(std::io::Error),
-    Json(serde_json::Error),
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("json error: {0}")]
+    Json(#[from] serde_json::Error),
 }
 // NOTE: From トレイトが実装されている場合、? で独自エラー型に自動変換してくれる
-impl From<std::io::Error> for MyError {
-    fn from(error: std::io::Error) -> Self {
-        MyError::Io(error)
-    }
-}
-impl From<serde_json::Error> for MyError {
-    fn from(error: serde_json::Error) -> Self {
-        MyError::Json(error)
-    }
-}
+//   impl From<T> for MyError { ... }
+// NOTE: thiserror crate を使用する場合、#[from] を付けることで上記と同様の実装となる
 
 fn main() {
     match read_calendar() {
